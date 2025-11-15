@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Lectures Portal</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Box Icons for UI elements -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Axios for API calls -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        /* Reset and Base Styles */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #818cf8;
+            --dark-color: #1f2937;
+            --light-color: #f3f4f6;
+            --gray-color: #9ca3af;
+            --text-color: #1f2937;
+            --text-color-secondary: #4b5563;
+            --card-bg: #ffffff;
+            --header-bg: rgba(255, 255, 255, 0.8);
+            --sidebar-bg: #ffffff;
+            --sidebar-width: 280px;
+            --header-height: 64px;
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+            --group-a-bg: #e8f5e9;
+            --group-b-bg: #e3f2fd;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #818cf8;
+            --primary-light: #4f46e5;
+            --dark-color: #ffffff;
+            --light-color: #111827;
+            --gray-color: #9ca3af;
+            --text-color: #f9fafb;
+            --text-color-secondary: #d1d5db;
+            --card-bg: #1f2937;
+            --header-bg: rgba(31, 41, 55, 0.8);
+            --sidebar-bg: #1f2937;
+            --group-a-bg: rgba(46, 125, 50, 0.2);
+            --group-b-bg: rgba(30, 136, 229, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            height: var(--header-height);
+            background: var(--header-bg);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        .header-search {
+            flex: 1;
+            margin: 0 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--gray-color);
+            background: transparent;
+            color: var(--dark-color);
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            padding: 24px;
+            overflow-y: auto;
+            transition: var(--transition);
+            border-right: 1px solid rgba(128, 128, 128, 0.1);
+            color: var(--text-color);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .department-list {
+            list-style: none;
+        }
+
+        .department-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .department-item:hover,
+        .department-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: calc(var(--header-height) + 24px) 24px 24px;
+            flex: 1;
+        }
+
+        .semester-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .semester-tab {
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            background: var(--card-bg);
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        .semester-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .subject-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        .subject-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .subject-header {
+            margin-bottom: 16px;
+        }
+
+        .subject-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 8px 0;
+        }
+
+        .subject-instructor {
+            color: var(--primary-color);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border: 3px solid var(--primary-color);
+            border-radius: 6px;
+            margin: 4px 0;
+            display: inline-block;
+        }
+
+        .subject-schedule {
+            color: var(--text-color-secondary);
+            font-size: 14px;
+            white-space: pre-line;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+
+        .group-schedule {
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .group-schedule.group-a {
+            background: var(--group-a-bg);
+            border-left: 4px solid #2e7d32;
+        }
+
+        .group-schedule.group-b {
+            background: var(--group-b-bg);
+            border-left: 4px solid #1e88e5;
+        }
+
+        .subject-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--light-color);
+            color: var(--dark-color);
+        }
+
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            color: var(--text-color);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--gray-color);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .pdf-list {
+            list-style: none;
+        }
+
+        .pdf-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-color);
+        }
+
+        .pdf-info {
+            flex: 1;
+        }
+
+        .pdf-title {
+            font-weight: 500;
+        }
+
+        .pdf-meta {
+            color: var(--gray-color);
+            font-size: 14px;
+        }
+
+        .pdf-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pdf-preview {
+            width: 100%;
+            height: 600px;
+            border: none;
+            margin-top: 16px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--dark-color);
+            font-size: 24px;
+            cursor: pointer;
+            margin-left: 16px;
+        }
+
+        .language-selector {
+            position: relative;
+            margin-left: 16px;
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+            min-width: 150px;
+            margin-top: 8px;
+        }
+
+        .language-dropdown.active {
+            display: block;
+        }
+
+        .language-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        .language-option:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        #langButton {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--gray-color);
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        #langButton:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        #sidebarToggle {
+            display: none;
+            padding: 8px;
+            font-size: 24px;
+            color: var(--text-color);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray-color);
+        }
+
+        .spinner {
+            border: 4px solid var(--light-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            #sidebarToggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                width: 280px;
+                z-index: 1001;
+                transition: left 0.3s ease;
+                background: var(--sidebar-bg);
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .header {
+                left: 0;
+                right: 0;
+                width: 100%;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 100%;
+                height: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
+        [dir="rtl"] {
+            direction: rtl;
+            text-align: right;
+        }
+
+        [dir="rtl"] .sidebar {
+            left: auto;
+            right: -280px;
+        }
+
+        [dir="rtl"] .sidebar.active {
+            right: 0;
+            left: auto;
+        }
+
+        @media (min-width: 769px) {
+            [dir="rtl"] .sidebar {
+                left: auto;
+                right: 0;
+                border-right: none;
+                border-left: 1px solid rgba(0, 0, 0, 0.1);
+            }
+
+            [dir="rtl"] .header {
+                left: 0;
+                right: var(--sidebar-width);
+            }
+
+            [dir="rtl"] .main-content {
+                margin-left: 0;
+                margin-right: var(--sidebar-width);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease;
+        }
+
+        .logout-btn {
+            margin-top: 24px;
+            padding: 12px 16px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .user-info {
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            background: var(--light-color);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            color: var(--text-color-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class='bx bxs-graduation'></i>
+                <span>EduPortal</span>
+            </div>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <p id="userName"></p>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            <ul class="department-list" id="departmentList">
+                <!-- Departments will be rendered here -->
+            </ul>
+        </aside>
+
+        <!-- Header -->
+        <header class="header">
+            <button id="sidebarToggle">
+                <i class='bx bx-menu'></i>
+            </button>
+            <div class="header-search">
+                <input type="text" class="search-input" placeholder="Search subjects, PDFs, instructors..." id="searchInput">
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class='bx bx-moon'></i>
+                </button>
+                <button class="theme-toggle" id="rtlToggle">
+                    <i class='bx bx-text-align-right'></i>
+                </button>
+                <div class="language-selector">
+                    <button class="btn btn-secondary" id="langButton">
+                        <i class='bx bx-globe'></i>
+                        <span id="currentLang">English</span>
+                    </button>
+                    <div class="language-dropdown" id="langDropdown">
+                        <div class="language-option" data-lang="en">English</div>
+                        <div class="language-option" data-lang="ku">کوردی</div>
+                        <div class="language-option" data-lang="ar">العربية</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="semester-tabs" id="semesterTabs">
+                <!-- Semester tabs will be rendered here -->
+            </div>
+            <div class="subjects-grid" id="subjectsGrid">
+                <!-- Subject cards will be rendered here -->
+            </div>
+        </main>
+
+        <!-- Modal -->
+        <div class="modal" id="pdfModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">Lecture PDFs</h2>
+                    <button class="modal-close" id="modalClose">
+                        <i class='bx bx-x'></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- PDF list will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8000/api';
+
+        // State Management
+        let currentDepartment = null;
+        let currentSemester = 1;
+        let currentUser = null;
+        let authToken = localStorage.getItem('authToken');
+        let favorites = [];
+
+        // API Helper
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE_URL}${endpoint}`;
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        logout();
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // Initialize UI
+        async function init() {
+            setupEventListeners();
+            loadLastState();
+            checkAuthStatus();
+            await renderDepartments();
+            
+            if (!currentDepartment) {
+                selectDepartment('se');
+            }
+
+            setupMobileMenu();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('modalClose').addEventListener('click', () => {
+                document.getElementById('pdfModal').classList.remove('active');
+            });
+            document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            document.getElementById('rtlToggle').addEventListener('click', toggleRTL);
+
+            document.getElementById('pdfModal').addEventListener('click', (e) => {
+                if (e.target.id === 'pdfModal') {
+                    document.getElementById('pdfModal').classList.remove('active');
+                }
+            });
+
+            // Language selector
+            document.getElementById('langButton').addEventListener('click', () => {
+                document.getElementById('langDropdown').classList.toggle('active');
+            });
+
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    setLanguage(option.dataset.lang);
+                    document.getElementById('langDropdown').classList.remove('active');
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.language-selector')) {
+                    document.getElementById('langDropdown').classList.remove('active');
+                }
+            });
+        }
+
+        function setupMobileMenu() {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            document.body.appendChild(overlay);
+
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+
+            sidebarToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            });
+
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+
+            document.querySelectorAll('.department-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('active');
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+        // Render Functions
+        async function renderDepartments() {
+            try {
+                document.getElementById('departmentList').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+                
+                const response = await apiCall('/departments');
+                const departments = response.data;
+
+                const departmentList = document.getElementById('departmentList');
+                departmentList.innerHTML = departments.map(dept => `
+                    <li class="department-item" data-id="${dept.id}" data-code="${dept.code}">
+                        ${dept.name}
+                    </li>
+                `).join('');
+
+                departmentList.querySelectorAll('.department-item').forEach(item => {
+                    item.addEventListener('click', () => selectDepartment(item.dataset.code));
+                });
+            } catch (error) {
+                document.getElementById('departmentList').innerHTML = '<div class="error-message">Failed to load departments</div>';
+            }
+        }
+
+        async function renderSemesters() {
+            try {
+                const response = await apiCall(`/departments/${currentDepartment}/semesters`);
+                const semesters = response.data;
+
+                const semesterTabs = document.getElementById('semesterTabs');
+                semesterTabs.innerHTML = semesters.map(sem => `
+                    <button class="semester-tab ${currentSemester === sem.number ? 'active' : ''}" data-semester="${sem.number}">
+                        Semester ${sem.number}
+                    </button>
+                `).join('');
+
+                semesterTabs.querySelectorAll('.semester-tab').forEach(tab => {
+                    tab.addEventListener('click', () => selectSemester(parseInt(tab.dataset.semester)));
+                });
+            } catch (error) {
+                console.error('Failed to load semesters:', error);
+            }
+        }
+
+        async function renderSubjects() {
+            try {
+                document.getElementById('subjectsGrid').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+                const response = await apiCall(`/departments/${currentDepartment}/semesters/${currentSemester}/subjects`);
+                const subjects = response.data;
+
+                const subjectsGrid = document.getElementById('subjectsGrid');
+                subjectsGrid.innerHTML = subjects.map(subject => `
+                    <div class="subject-card slide-in">
+                        <div class="subject-header">
+                            <h3 class="subject-name">${subject.name}</h3>
+                            <p class="subject-instructor">${subject.instructor}</p>
+                            <div class="subject-schedule">
+                                ${subject.schedule.split('\n').map(s => {
+                                    const group = s.toLowerCase().includes('group a') ? 'group-a' : 'group-b';
+                                    return `<div class="group-schedule ${group}">${s}</div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <div class="subject-actions">
+                            <button class="btn btn-primary btn-icon" onclick="viewPDFs('${subject.code}')">
+                                <i class='bx bx-file'></i> View PDFs
+                            </button>
+                            <button class="btn btn-secondary btn-icon" onclick="toggleFavorite(${subject.id}, this)">
+                                <i class='bx ${favorites.includes(subject.id) ? 'bxs-heart' : 'bx-heart'}'></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('subjectsGrid').innerHTML = '<div class="error-message">Failed to load subjects</div>';
+            }
+        }
+
+        async function renderPDFList(subjectCode) {
+            try {
+                const response = await apiCall(`/subjects/${subjectCode}/pdfs`);
+                const pdfs = response.data;
+
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = `
+                    <ul class="pdf-list">
+                        ${pdfs.map(pdf => `
+                            <li class="pdf-item fade-in">
+                                <div class="pdf-info">
+                                    <div class="pdf-title">${pdf.title}</div>
+                                    <div class="pdf-meta">
+                                        ${pdf.date} • ${pdf.size} • ${pdf.type}
+                                    </div>
+                                </div>
+                                <div class="pdf-actions">
+                                    <button class="btn btn-secondary btn-icon" onclick="previewPDF('${pdf.url}')">
+                                        <i class='bx bx-show'></i> Preview
+                                    </button>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                document.getElementById('modalBody').innerHTML = '<div class="error-message">Failed to load PDFs</div>';
+            }
+        }
+
+        // Action Handlers
+        async function selectDepartment(deptCode) {
+            try {
+                // Get department ID from the department list
+                const deptElement = document.querySelector(`[data-code="${deptCode}"]`);
+                if (!deptElement) return;
+
+                currentDepartment = deptCode;
+                currentSemester = 1;
+
+                document.querySelectorAll('.department-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.code === deptCode);
+                });
+
+                await renderSemesters();
+                await renderSubjects();
+                saveState();
+            } catch (error) {
+                console.error('Error selecting department:', error);
+            }
+        }
+
+        async function selectSemester(number) {
+            currentSemester = number;
+            document.querySelectorAll('.semester-tab').forEach(tab => {
+                tab.classList.toggle('active', parseInt(tab.dataset.semester) === number);
+            });
+            await renderSubjects();
+            saveState();
+        }
+
+        function viewPDFs(subjectCode) {
+            renderPDFList(subjectCode);
+            document.getElementById('modalTitle').textContent = `Lecture PDFs - ${subjectCode}`;
+            document.getElementById('pdfModal').classList.add('active');
+        }
+
+        function previewPDF(url) {
+            let previewUrl = url;
+            
+            if (url.includes("drive.google.com/file/d/")) {
+                const match = url.match(/\/d\/([^/]+)\//);
+                if (match) {
+                    previewUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+                }
+            }
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <iframe class="pdf-preview" src="${previewUrl}" allow="autoplay"></iframe>
+            `;
+        }
+
+        async function toggleFavorite(subjectId, button) {
+            if (!authToken) {
+                alert('Please login to add favorites');
+                return;
+            }
+
+            try {
+                const response = await apiCall('/favorites/toggle', {
+                    method: 'POST',
+                    body: JSON.stringify({ subject_id: subjectId })
+                });
+
+                if (response.success) {
+                    const isFavorited = response.data.is_favorited;
+                    button.innerHTML = isFavorited ? 
+                        '<i class="bx bxs-heart"></i>' : 
+                        '<i class="bx bx-heart"></i>';
+
+                    if (isFavorited) {
+                        favorites.push(subjectId);
+                    } else {
+                        favorites = favorites.filter(id => id !== subjectId);
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling favorite:', error);
+            }
+        }
+
+        async function handleSearch(e) {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (query.length < 2) {
+                await renderSubjects();
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/search?query=${encodeURIComponent(query)}`);
+                const results = response.data;
+
+                const subjectsGrid = document.getElementById('subjectsGrid');
+                subjectsGrid.innerHTML = results.map(subject => `
+                    <div class="subject-card slide-in">
+                        <div class="subject-header">
+                            <h3 class="subject-name">${subject.name}</h3>
+                            <p class="subject-instructor">${subject.instructor}</p>
+                            <div class="subject-schedule">
+                                ${subject.schedule.split('\n').map(s => {
+                                    const group = s.toLowerCase().includes('group a') ? 'group-a' : 'group-b';
+                                    return `<div class="group-schedule ${group}">${s}</div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <div class="subject-actions">
+                            <button class="btn btn-primary btn-icon" onclick="viewPDFs('${subject.code}')">
+                                <i class='bx bx-file'></i> View PDFs
+                            </button>
+                            <button class="btn btn-secondary btn-icon" onclick="toggleFavorite(${subject.id}, this)">
+                                <i class='bx ${favorites.includes(subject.id) ? 'bxs-heart' : 'bx-heart'}'></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function toggleTheme() {
+            const theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+            document.body.dataset.theme = theme;
+            document.getElementById('themeToggle').innerHTML = theme === 'dark' ? 
+                '<i class="bx bx-sun"></i>' : '<i class="bx bx-moon"></i>';
+            localStorage.setItem('theme', theme);
+        }
+
+        function toggleRTL() {
+            document.dir = document.dir === 'rtl' ? 'ltr' : 'rtl';
+            localStorage.setItem('direction', document.dir);
+        }
+
+        // State Management
+        function saveState() {
+            localStorage.setItem('lastDepartment', currentDepartment);
+            localStorage.setItem('lastSemester', currentSemester);
+        }
+
+        function loadLastState() {
+            const lastDepartment = localStorage.getItem('lastDepartment') || 'se';
+            const lastSemester = parseInt(localStorage.getItem('lastSemester')) || 1;
+            const theme = localStorage.getItem('theme');
+            const direction = localStorage.getItem('direction');
+
+            currentDepartment = lastDepartment;
+            currentSemester = lastSemester;
+
+            if (theme) {
+                document.body.dataset.theme = theme;
+                document.getElementById('themeToggle').innerHTML = theme === 'dark' ? 
+                    '<i class="bx bx-sun"></i>' : '<i class="bx bx-moon"></i>';
+            }
+
+            if (direction) {
+                document.dir = direction;
+            }
+        }
+
+        // Authentication
+        function checkAuthStatus() {
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('authToken');
+            
+            if (user && token) {
+                currentUser = JSON.parse(user);
+                authToken = token;
+                displayUserInfo();
+                loadFavorites();
+            }
+        }
+
+        function displayUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            const userName = document.getElementById('userName');
+            userInfo.style.display = 'block';
+            userName.textContent = `Welcome, ${currentUser.name}!`;
+        }
+
+        async function loadFavorites() {
+            if (!authToken) return;
+            
+            try {
+                const response = await apiCall('/favorites');
+                favorites = response.data.map(fav => fav.id);
+            } catch (error) {
+                console.error('Error loading favorites:', error);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            currentUser = null;
+            authToken = null;
+            favorites = [];
+            
+            document.getElementById('userInfo').style.display = 'none';
+            
+            location.reload();
+        }
+
+        // Language translations
+        const translations = {
+            en: {
+                appName: "EduPortal",
+                search: "Search subjects, PDFs, instructors...",
+                lecturePDFs: "Lecture PDFs"
+            },
+            ku: {
+                appName: "پۆرتاڵی خوێندن",
+                search: "گەڕان بۆ بابەت، پی دی ئێف، مامۆستایان...",
+                lecturePDFs: "PDF وانەکان"
+            },
+            ar: {
+                appName: "بوابة التعليم",
+                search: "البحث عن المواد، ملفات PDF، المدرسين...",
+                lecturePDFs: "ملفات PDF للمحاضرات"
+            }
+        };
+
+        let currentLang = localStorage.getItem('language') || 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            localStorage.setItem('language', lang);
+            
+            document.dir = lang === 'ar' || lang === 'ku' ? 'rtl' : 'ltr';
+            
+            document.querySelector('.logo span').textContent = translations[lang].appName;
+            document.querySelector('#searchInput').placeholder = translations[lang].search;
+            document.getElementById('currentLang').textContent = 
+                lang === 'en' ? 'English' : 
+                lang === 'ku' ? 'کوردی' : 'العربية';
+        }
+
+        // Initialize the application
+        init();
+        setLanguage(currentLang);
+    </script>
+</body>
+</html>
